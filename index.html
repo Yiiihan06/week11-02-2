@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>3D 决策泡泡</title>
+    <title>3D Decision Bubbles</title>
     <style>
         * {
             margin: 0;
@@ -13,7 +13,7 @@
 
         body {
             overflow: hidden;
-            font-family: 'Microsoft YaHei', 'PingFang SC', sans-serif;
+            font-family: 'Arial', 'Helvetica', sans-serif;
         }
 
         #canvas-container {
@@ -105,9 +105,9 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
-        // 场景设置
+        // Scene setup
         const scene = new THREE.Scene();
-        scene.background = new THREE.Color(0xf5f5f5);
+        scene.background = new THREE.Color(0xf5ebe0);
 
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         camera.position.set(0, 1.5, 3);
@@ -118,16 +118,63 @@
         renderer.shadowMap.enabled = true;
         document.getElementById('canvas-container').appendChild(renderer.domElement);
 
-        // 添加光源
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+        // Add lighting
+        const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
         scene.add(ambientLight);
 
-        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.4);
+        const directionalLight = new THREE.DirectionalLight(0xffffff, 0.5);
         directionalLight.position.set(5, 10, 5);
         directionalLight.castShadow = true;
         scene.add(directionalLight);
 
-        // 创建书桌
+        const pointLight = new THREE.PointLight(0xffeaa7, 0.3);
+        pointLight.position.set(-3, 2, 2);
+        scene.add(pointLight);
+
+        // Create floor
+        const floorGeometry = new THREE.PlaneGeometry(10, 10);
+        const floorMaterial = new THREE.MeshStandardMaterial({ color: 0xdcc9aa });
+        const floor = new THREE.Mesh(floorGeometry, floorMaterial);
+        floor.rotation.x = -Math.PI / 2;
+        floor.receiveShadow = true;
+        scene.add(floor);
+
+        // Create walls (home environment)
+        // Back wall
+        const backWallGeometry = new THREE.BoxGeometry(10, 4, 0.2);
+        const wallMaterial = new THREE.MeshStandardMaterial({ color: 0xe8dcc8 });
+        const backWall = new THREE.Mesh(backWallGeometry, wallMaterial);
+        backWall.position.set(0, 2, -5);
+        scene.add(backWall);
+
+        // Left wall
+        const leftWall = new THREE.Mesh(new THREE.BoxGeometry(0.2, 4, 10), wallMaterial);
+        leftWall.position.set(-5, 2, 0);
+        scene.add(leftWall);
+
+        // Right wall
+        const rightWall = new THREE.Mesh(new THREE.BoxGeometry(0.2, 4, 10), wallMaterial);
+        rightWall.position.set(5, 2, 0);
+        scene.add(rightWall);
+
+        // Window
+        const windowFrameGeometry = new THREE.BoxGeometry(2, 1.5, 0.1);
+        const windowFrameMaterial = new THREE.MeshStandardMaterial({ color: 0x8b7355 });
+        const windowFrame = new THREE.Mesh(windowFrameGeometry, windowFrameMaterial);
+        windowFrame.position.set(-2, 2.5, -4.95);
+        scene.add(windowFrame);
+
+        const windowGlassGeometry = new THREE.BoxGeometry(1.8, 1.3, 0.05);
+        const windowGlassMaterial = new THREE.MeshStandardMaterial({
+            color: 0xadd8e6,
+            transparent: true,
+            opacity: 0.3
+        });
+        const windowGlass = new THREE.Mesh(windowGlassGeometry, windowGlassMaterial);
+        windowGlass.position.set(-2, 2.5, -4.9);
+        scene.add(windowGlass);
+
+        // Create desk
         const deskGeometry = new THREE.BoxGeometry(3, 0.1, 1.5);
         const deskMaterial = new THREE.MeshStandardMaterial({ color: 0xd4a574 });
         const desk = new THREE.Mesh(deskGeometry, deskMaterial);
@@ -135,7 +182,7 @@
         desk.receiveShadow = true;
         scene.add(desk);
 
-        // 创建桌腿
+        // Desk legs
         const legGeometry = new THREE.BoxGeometry(0.1, 0.7, 0.1);
         const legMaterial = new THREE.MeshStandardMaterial({ color: 0xa67c52 });
         const legPositions = [
@@ -150,8 +197,38 @@
             scene.add(leg);
         });
 
-        // 添加一些桌面物品
-        // 笔记本
+        // Chair
+        const chairSeatGeometry = new THREE.BoxGeometry(0.6, 0.1, 0.6);
+        const chairMaterial = new THREE.MeshStandardMaterial({ color: 0xb08968 });
+        const chairSeat = new THREE.Mesh(chairSeatGeometry, chairMaterial);
+        chairSeat.position.set(0, 0.5, 1.5);
+        scene.add(chairSeat);
+
+        const chairBackGeometry = new THREE.BoxGeometry(0.6, 0.6, 0.1);
+        const chairBack = new THREE.Mesh(chairBackGeometry, chairMaterial);
+        chairBack.position.set(0, 0.8, 1.2);
+        scene.add(chairBack);
+
+        // Bookshelf
+        const shelfGeometry = new THREE.BoxGeometry(1.5, 2, 0.4);
+        const shelfMaterial = new THREE.MeshStandardMaterial({ color: 0xa67c52 });
+        const bookshelf = new THREE.Mesh(shelfGeometry, shelfMaterial);
+        bookshelf.position.set(3.5, 1, -3);
+        scene.add(bookshelf);
+
+        // Books on shelf
+        for (let i = 0; i < 5; i++) {
+            const bookGeometry = new THREE.BoxGeometry(0.15, 0.25, 0.3);
+            const bookColors = [0xc44569, 0x4a69bd, 0x60a3bc, 0xe55039, 0x78e08f];
+            const bookMaterial = new THREE.MeshStandardMaterial({ color: bookColors[i] });
+            const book = new THREE.Mesh(bookGeometry, bookMaterial);
+            book.position.set(3.5 - 0.6 + i * 0.3, 1.5, -3);
+            book.rotation.y = (Math.random() - 0.5) * 0.2;
+            scene.add(book);
+        }
+
+        // Desk items
+        // Notebook
         const notebookGeometry = new THREE.BoxGeometry(0.3, 0.02, 0.4);
         const notebookMaterial = new THREE.MeshStandardMaterial({ color: 0x8b9aa3 });
         const notebook = new THREE.Mesh(notebookGeometry, notebookMaterial);
@@ -159,81 +236,104 @@
         notebook.rotation.y = Math.PI / 6;
         scene.add(notebook);
 
-        // 笔筒
+        // Pen holder
         const cupGeometry = new THREE.CylinderGeometry(0.08, 0.08, 0.2, 16);
         const cupMaterial = new THREE.MeshStandardMaterial({ color: 0xc9ada7 });
         const cup = new THREE.Mesh(cupGeometry, cupMaterial);
         cup.position.set(1, 0.85, 0.3);
         scene.add(cup);
 
-        // 地板
-        const floorGeometry = new THREE.PlaneGeometry(10, 10);
-        const floorMaterial = new THREE.MeshStandardMaterial({ color: 0xe8e8e8 });
-        const floor = new THREE.Mesh(floorGeometry, floorMaterial);
-        floor.rotation.x = -Math.PI / 2;
-        floor.receiveShadow = true;
-        scene.add(floor);
+        // Lamp
+        const lampBaseGeometry = new THREE.CylinderGeometry(0.1, 0.12, 0.05, 16);
+        const lampBaseMaterial = new THREE.MeshStandardMaterial({ color: 0x7f8c8d });
+        const lampBase = new THREE.Mesh(lampBaseGeometry, lampBaseMaterial);
+        lampBase.position.set(-1.2, 0.76, -0.5);
+        scene.add(lampBase);
 
-        // 莫兰迪色系
+        const lampPoleGeometry = new THREE.CylinderGeometry(0.02, 0.02, 0.4, 8);
+        const lampPole = new THREE.Mesh(lampPoleGeometry, lampBaseMaterial);
+        lampPole.position.set(-1.2, 0.96, -0.5);
+        scene.add(lampPole);
+
+        const lampShadeGeometry = new THREE.ConeGeometry(0.15, 0.2, 16);
+        const lampShadeMaterial = new THREE.MeshStandardMaterial({
+            color: 0xf9ca24,
+            emissive: 0xf9ca24,
+            emissiveIntensity: 0.3
+        });
+        const lampShade = new THREE.Mesh(lampShadeGeometry, lampShadeMaterial);
+        lampShade.position.set(-1.2, 1.26, -0.5);
+        scene.add(lampShade);
+
+        // Rug under desk
+        const rugGeometry = new THREE.PlaneGeometry(4, 3);
+        const rugMaterial = new THREE.MeshStandardMaterial({ color: 0xc8b6a6 });
+        const rug = new THREE.Mesh(rugGeometry, rugMaterial);
+        rug.rotation.x = -Math.PI / 2;
+        rug.position.set(0, 0.01, 0.5);
+        scene.add(rug);
+
+        // Morandi color palette
         const morandiColors = [
-            0xd4b5b0, // 豆沙粉
-            0xb4c4b7, // 灰绿
-            0xc9b8a3  // 灰棕
+            0xd4b5b0, // Dusty pink
+            0xb4c4b7, // Sage green
+            0xc9b8a3  // Taupe brown
         ];
 
-        // 泡泡数据
+        // Bubble data
         const bubbleData = [
             {
-                text: '我是不是应该去换家居服',
+                text: 'Should I change into home clothes?',
                 position: new THREE.Vector3(-1.5, 1.5, 0.5),
                 color: morandiColors[0],
                 tasks: [
-                    '先问自己：我现在舒服吗？',
-                    '看看衣服是否在附近。',
-                    '给自己一个小目标：只做"拿衣服"这一步。',
-                    '如果衣服已经到手，让自己做下一步：试着穿上。',
-                    '换好后立即回到原本的任务。'
+                    'Ask yourself: Am I comfortable right now?',
+                    'Check if clothes are nearby.',
+                    'Give yourself a small goal: just do the "get clothes" step.',
+                    'If clothes are in hand, do the next step: try putting them on.',
+                    'After changing, immediately return to the original task.'
                 ]
             },
             {
-                text: '我今天有哪些事情要做',
+                text: 'What do I need to do today?',
                 position: new THREE.Vector3(0, 2, 0),
                 color: morandiColors[1],
                 tasks: [
-                    '停一下，先做一次深呼吸。',
-                    '问自己一个问题：有什么是 必须 今天完成的吗？',
-                    '把它们写下来，只写关键词。',
-                    '把这些事情按"最容易 → 最困难"排序。',
-                    '先从最小、最容易的一件开始做。'
+                    'Pause for a moment, take a deep breath.',
+                    'Ask yourself: What MUST be done today?',
+                    'Write them down, just keywords.',
+                    'Sort these things from "easiest → hardest".',
+                    'Start with the smallest, easiest one.'
                 ]
             },
             {
-                text: '我是不是应该把肉从冰箱拿出来解冻',
+                text: 'Should I take the meat out to defrost?',
                 position: new THREE.Vector3(1.5, 1.5, 0.5),
                 color: morandiColors[2],
                 tasks: [
-                    '首先问自己：我今天会做这块肉吗？',
-                    '看一下现在的时间，解冻需要多久？',
-                    '评估一下：我现在有 30 秒去从冰箱拿出来吗？',
-                    '如果答案是 yes，那就只做一步：把肉拿出来放到盘子里。',
-                    '完成后立刻回到原来的事情。'
+                    'First ask yourself: Will I cook this meat today?',
+                    'Check the time now, how long does defrosting take?',
+                    'Assess: Do I have 30 seconds to get it from the fridge?',
+                    'If the answer is yes, just do one step: take the meat out and put it on a plate.',
+                    'After completing, immediately return to what you were doing.'
                 ]
             }
         ];
 
-        // 创建泡泡
+        // Create bubbles
         const bubbles = [];
         const raycaster = new THREE.Raycaster();
         const mouse = new THREE.Vector2();
 
         bubbleData.forEach((data, index) => {
-            const geometry = new THREE.SphereGeometry(0.3, 32, 32);
+            const geometry = new THREE.SphereGeometry(0.35, 32, 32);
             const material = new THREE.MeshStandardMaterial({
                 color: data.color,
                 transparent: true,
-                opacity: 0.85,
-                metalness: 0.1,
-                roughness: 0.4
+                opacity: 0.4,
+                metalness: 0.2,
+                roughness: 0.3,
+                side: THREE.DoubleSide
             });
             const bubble = new THREE.Mesh(geometry, material);
             bubble.position.copy(data.position);
@@ -251,47 +351,70 @@
             bubbles.push(bubble);
         });
 
-        // 创建画布用于文字纹理
+        // Create canvas for text texture
         function createTextTexture(text, color) {
             const canvas = document.createElement('canvas');
-            canvas.width = 512;
+            canvas.width = 1024;
             canvas.height = 512;
             const context = canvas.getContext('2d');
 
             context.fillStyle = 'transparent';
             context.fillRect(0, 0, canvas.width, canvas.height);
 
-            context.fillStyle = '#ffffff';
-            context.font = 'bold 40px Microsoft YaHei';
+            // Add shadow for better visibility
+            context.shadowColor = 'rgba(0, 0, 0, 0.3)';
+            context.shadowBlur = 4;
+            context.shadowOffsetX = 2;
+            context.shadowOffsetY = 2;
+
+            context.fillStyle = '#2c3e50';
+            context.font = 'bold 42px Arial';
             context.textAlign = 'center';
             context.textBaseline = 'middle';
 
-            const words = text.match(/.{1,8}/g) || [text];
-            const lineHeight = 50;
-            const startY = canvas.height / 2 - ((words.length - 1) * lineHeight) / 2;
+            const maxWidth = 900;
+            const words = text.split(' ');
+            let lines = [];
+            let currentLine = '';
 
-            words.forEach((word, index) => {
-                context.fillText(word, canvas.width / 2, startY + index * lineHeight);
+            words.forEach(word => {
+                const testLine = currentLine + (currentLine ? ' ' : '') + word;
+                const metrics = context.measureText(testLine);
+                if (metrics.width > maxWidth && currentLine !== '') {
+                    lines.push(currentLine);
+                    currentLine = word;
+                } else {
+                    currentLine = testLine;
+                }
+            });
+            lines.push(currentLine);
+
+            const lineHeight = 55;
+            const startY = canvas.height / 2 - ((lines.length - 1) * lineHeight) / 2;
+
+            lines.forEach((line, index) => {
+                context.fillText(line, canvas.width / 2, startY + index * lineHeight);
             });
 
             const texture = new THREE.CanvasTexture(canvas);
             return texture;
         }
 
-        // 为每个泡泡添加文字
+        // Add text to each bubble
         bubbles.forEach(bubble => {
             const texture = createTextTexture(bubble.userData.text, bubble.material.color);
             const spriteMaterial = new THREE.SpriteMaterial({
                 map: texture,
                 transparent: true,
-                opacity: 1
+                opacity: 1,
+                depthTest: false
             });
             const sprite = new THREE.Sprite(spriteMaterial);
-            sprite.scale.set(0.6, 0.6, 1);
+            sprite.scale.set(1.4, 0.7, 1);
             bubble.add(sprite);
         });
 
-        // 音频上下文（用于生成空灵的声音）
+        // Audio context for generating ethereal sounds
         let audioContext;
 
         function initAudio() {
@@ -345,11 +468,11 @@
             oscillator.stop(audioContext.currentTime + 0.3);
         }
 
-        // 当前选中的泡泡
+        // Currently selected bubble
         let currentBubble = null;
         let completedTasks = [];
 
-        // 点击事件
+        // Click event handler
         function onMouseClick(event) {
             mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
             mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
@@ -362,12 +485,12 @@
                 if (!bubble.userData.completed) {
                     currentBubble = bubble;
 
-                    // 播放不同频率的声音
+                    // Play different frequency sounds
                     const frequencies = [432, 528, 639];
                     const index = bubbles.indexOf(bubble);
                     playEtherealSound(frequencies[index]);
 
-                    // 显示任务列表
+                    // Show task overlay
                     showTaskOverlay(bubble);
                 }
             }
@@ -393,7 +516,7 @@
                         taskItem.classList.add('completed');
                         completedTasks.push(index);
 
-                        // 检查是否全部完成
+                        // Check if all tasks are completed
                         if (completedTasks.length === bubble.userData.tasks.length) {
                             setTimeout(() => {
                                 completeBubble(bubble);
@@ -414,10 +537,10 @@
 
             bubble.userData.completed = true;
 
-            // 播放破碎音效
+            // Play burst sound effect
             playBurstSound();
 
-            // 泡泡破碎动画
+            // Bubble burst animation
             const initialScale = bubble.scale.clone();
             let scaleTime = 0;
             const scaleAnimation = () => {
@@ -436,7 +559,7 @@
             scaleAnimation();
         }
 
-        // 彩带动画
+        // Confetti animation
         function showConfetti() {
             const canvas = document.getElementById('confetti-canvas');
             const ctx = canvas.getContext('2d');
@@ -489,13 +612,13 @@
             animateConfetti();
         }
 
-        // 动画循环
+        // Animation loop
         function animate() {
             requestAnimationFrame(animate);
 
             const time = Date.now() * 0.001;
 
-            // 泡泡浮动动画
+            // Bubble floating animation
             bubbles.forEach(bubble => {
                 if (!bubble.userData.completed) {
                     bubble.position.y = bubble.userData.originalY + Math.sin(time + bubble.userData.floatOffset) * 0.1;
@@ -506,7 +629,7 @@
             renderer.render(scene, camera);
         }
 
-        // 事件监听
+        // Event listeners
         window.addEventListener('click', onMouseClick);
         window.addEventListener('resize', () => {
             camera.aspect = window.innerWidth / window.innerHeight;
